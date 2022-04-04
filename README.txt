@@ -20,3 +20,17 @@ be sure python works on your system
 
 you can open a terminal and type 'py --version'
 it should say something like 'Python 3.10.3'
+
+
+to open a terminal you can:
+
+On windows
+- Win + R
+  type 'CMD'
+  Enter
+- Win
+  search 'CMD'
+
+On linux
+- right click
+  open terminal

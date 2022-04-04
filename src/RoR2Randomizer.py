@@ -1,7 +1,8 @@
 import sys
 from tkinter import Misc
+from turtle import Shape
 from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtWidgets import QApplication, QWidget, QComboBox, QCheckBox, QPushButton, QSpinBox, QLabel
+from PyQt6.QtWidgets import QApplication, QWidget, QComboBox, QCheckBox, QPushButton, QSpinBox, QLabel, QSplitter, QFrame
 from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QStackedLayout, QGridLayout
 from PyQt6.QtGui import QIcon
 
@@ -12,7 +13,7 @@ import re
 
 import tools
 
-icon_size = QSize(30, 30)
+button_icon_size = QSize(50, 50)
 
 class AbilityWidget(QWidget):
     def __init__(self, survivor_name, survivor_icon):
@@ -20,9 +21,11 @@ class AbilityWidget(QWidget):
         self.survivor_name = survivor_name
         self.init_ui()
     
+
     def init_ui(self):
 
         layoutMain = QGridLayout(self)
+        layoutMain.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self.fill_layout(layoutMain)
 
         self.set_default_values_gui()
@@ -35,31 +38,42 @@ class AbilityWidget(QWidget):
             'Utility',
             'Special',
         ]
+
+        # used for some black magic sorcery when the survivor has two misc abilities
+        has_to_misc = False
+        is_first_misc = True
         if self.survivor_name == 'MUL-T':
-            abilities.insert(1, 'Misc')
-            abilities.insert(2, 'Misc')
+            abilities.insert(1, 'Misc1')
+            abilities.insert(2, 'Misc2')
+            has_to_misc = True
         elif self.survivor_name == 'Acrid' or self.survivor_name == 'Railgunner' or self.survivor_name == 'Void Fiend':
             abilities.insert(0, 'Misc')
         elif self.survivor_name == 'Captain':
-            abilities.insert(4, 'Misc')
-            abilities.insert(5, 'Misc')
+            abilities.insert(4, 'Misc1')
+            abilities.insert(5, 'Misc2')
+            has_to_misc = True
 
-        try:
-            folder_icon_abilities = os.listdir(f'icons/abilities/{self.survivor_name}')
-        except:
-            print('missing abilities folder for ', self.survivor_name)
-            return
+        folder_icon_abilities = os.listdir(f'icons/abilities/{self.survivor_name}')
+
         self.dict_abilities_buttons = {ability.lower(): [] for ability in abilities}
 
         for i in range(len(abilities)):
             title = abilities[i]
             mainLayout.addWidget(QLabel(title) , i, 0)
-            self.add_to_array(folder_icon_abilities, mainLayout, i, 1, f'^{title.lower()}')
+            self.add_to_array(folder_icon_abilities, mainLayout, i, 1, title.lower(), has_to_misc, is_first_misc)
+            if has_to_misc:
+                if i == 1 and self.survivor_name == 'MUL-T' or i == 4 and self.survivor_name == 'Captain':
+                    is_first_misc = False
 
-    def get_array(self, abilities, matcher):
+    def get_array(self, abilities, title):
+        # we do some sorcery here for the survivors who have two misc abilities
+        if re.match('^misc', title):
+            matcher = '^misc'
+        else:
+            matcher = f'^{title}'
         return [ability for ability in abilities if re.match(matcher, ability)]
 
-    def add_to_array(self, folder_icon_abilities, layout, row, column, matcher):
+    def add_to_array(self, folder_icon_abilities, layout, row, column, matcher, has_two_misc = False, is_first_misc = False):
         for item in self.get_array(folder_icon_abilities, matcher):
             name = item.split('.')[0]
             icon = QIcon(f'icons/abilities/{self.survivor_name}/{item}')
@@ -67,10 +81,20 @@ class AbilityWidget(QWidget):
             button.setCheckable(True)
             button.setChecked(False)
             button.setEnabled(True)
-            button.setIconSize(icon_size)
+            button.setIconSize(button_icon_size)
+            button.setFixedSize(button_icon_size)
             button.setStyleSheet(tools.get_button_stylesheet())
             button.setToolTip(f'{name}')
+            # double misc abilities, the return of the sorcery
+            if re.match('^misc', name):
+                if has_two_misc:
+                    if is_first_misc:
+                        name = 'misc1_'
+                    else:
+                        name = 'misc2_'
+
             self.dict_abilities_buttons[name[:-1]].append(button)
+            button.clicked.connect(partial(self.on_button_clicked, name[:-1], button))
             layout.addWidget(button, row, column)
             column += 1
 
@@ -82,6 +106,31 @@ class AbilityWidget(QWidget):
                 buttons[0].setChecked(True)
                 for button in buttons[1:]:
                     button.setChecked(False)
+
+    def on_button_clicked(self, key, sender):
+        # isTheOnlyOneChecked is there because
+        # you can't have no survivor selected
+        isTheOnlyOneChecked = True
+        for button in self.dict_abilities_buttons[key]:
+            if button != sender and button.isChecked():
+                button.setChecked(False)
+                isTheOnlyOneChecked = False
+
+        if isTheOnlyOneChecked:
+            sender.setChecked(True)
+
+    def randomize_abilities(self):
+        for key, buttons in self.dict_abilities_buttons.items():
+            if len(buttons) <= 1:
+                pass
+            else:
+                max = len(buttons)
+                index = tools.get_random_int(0, max -1)
+                for i in range(max):
+                    if i == index:
+                        buttons[i].setChecked(True)
+                    else:
+                        buttons[i].setChecked(False)
         
 
 class MainWindow(QWidget):
@@ -99,8 +148,17 @@ class MainWindow(QWidget):
         
         layoutLeft = self.set_left_side()
         layoutRight = self.set_right_side()
-        
+
+        layoutLeft.setContentsMargins(10, 0, 10, 0)
+        layoutRight.setContentsMargins(10, 0, 10, 0)
+
+        frame = QFrame()
+        frame.setFrameShape(QFrame.Shape.VLine)
+
         layout.addLayout(layoutLeft)
+        layout.addStretch()
+        layout.addWidget(frame)
+        layout.addStretch()
         layout.addLayout(layoutRight)
         
         self.set_default_values_gui()
@@ -137,7 +195,7 @@ class MainWindow(QWidget):
             self.layoutAbilities.addWidget(AbilityWidget(survivor, icon))
         
         btnRandomizeAbilities = QPushButton('Randomize abilities')
-        
+        btnRandomizeAbilities.clicked.connect(self.randomize_abilities)
         layout = QVBoxLayout()
         layout.addWidget(self.cbSurvivorLeft)
         layout.addLayout(self.layoutAbilities)
@@ -165,7 +223,7 @@ class MainWindow(QWidget):
             self.cbSurvivorRight.addItem(icon, survivor)
         self.cbSurvivorRight.currentIndexChanged.connect(partial(self.cbSurvivorIndexChanged, self.cbSurvivorRight))
         
-        self.survivors_buttons = tools.create_buttons(self.survivors_icons, icon_size, self.survivors_names, self.btnSurvivorToggled)
+        self.survivors_buttons = tools.create_buttons(self.survivors_icons, button_icon_size, self.survivors_names, self.btnSurvivorToggled)
         gridSurvivor = tools.create_grid(self.survivors_buttons, 8)
         
         # artifact
@@ -186,7 +244,7 @@ class MainWindow(QWidget):
         layoutArtifactLuck.addWidget(self.cbArtifactLuck)
         layoutArtifactLuck.addWidget(self.sbCustomArtifactLuck)
         
-        self.artifacts_buttons = tools.create_buttons(self.artifacts_icons, icon_size, self.artifacts_names)
+        self.artifacts_buttons = tools.create_buttons(self.artifacts_icons, button_icon_size, self.artifacts_names)
         gridArtifact = tools.create_grid(self.artifacts_buttons, 4)
         
         # start button
@@ -202,7 +260,9 @@ class MainWindow(QWidget):
         layoutGamemode.addWidget(self.cbxGamemode)
         layoutGamemode.addWidget(self.cbGamemode)
         layoutChoices.addLayout(layoutGamemode)
-        
+
+        layoutChoices.addSpacing(10)
+
         # layout survivor
         layoutSurvivor = QVBoxLayout()
         layoutSurvivor.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -211,6 +271,8 @@ class MainWindow(QWidget):
         layoutSurvivor.addLayout(gridSurvivor)
         layoutChoices.addLayout(layoutSurvivor)
         
+        layoutChoices.addSpacing(10)
+
         # layout artifact
         layoutArtifact = QVBoxLayout()
         layoutArtifact.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -275,7 +337,7 @@ class MainWindow(QWidget):
             button.setEnabled(checked)
     
     def btnSurvivorToggled(self, btn, checked):
-        # isTheOnlyOneChecked are there because
+        # isTheOnlyOneChecked is there because
         # you can't have no survivor selected
         i = 0
         isTheOnlyOneChecked = True
@@ -351,7 +413,8 @@ class MainWindow(QWidget):
             for i in range(len(self.artifacts_buttons)):
                 self.artifacts_buttons[i].setChecked(i in btn_to_activate)
 
-            
+    def randomize_abilities(self):
+        self.layoutAbilities.currentWidget().randomize_abilities()
 
 def main():
     app = QApplication(sys.argv)

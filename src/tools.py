@@ -1,3 +1,4 @@
+from PyQt6.QtCore import QSize
 from PyQt6.QtWidgets import QPushButton, QGridLayout
 import random
 from functools import partial
@@ -6,7 +7,7 @@ def get_random_int(min: int, max: int):
     '''min and max are included'''
     return random.randint(min, max)
 
-def create_buttons(icons, iconSize, toolTips, slot=None):
+def create_buttons(icons, buttonIconSize, toolTips, slot=None):
     btnStyleSheet = get_button_stylesheet()
     buttons = [QPushButton(icon, '', None) for icon in icons]
     for button, toolTip in zip(buttons, toolTips):
@@ -14,7 +15,8 @@ def create_buttons(icons, iconSize, toolTips, slot=None):
             button.setChecked(False)
             button.setEnabled(True)
             button.setToolTip(toolTip)
-            button.setIconSize(iconSize)
+            button.setFixedSize(buttonIconSize)
+            button.setIconSize(buttonIconSize - QSize(10, 10)) # add border
             button.setStyleSheet(btnStyleSheet)
             if slot:
                 button.clicked.connect(partial(slot, button))

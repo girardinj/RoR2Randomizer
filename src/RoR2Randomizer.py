@@ -44,8 +44,11 @@ class AbilityWidget(QWidget):
             abilities.insert(4, 'Misc')
             abilities.insert(5, 'Misc')
 
-
-        folder_icon_abilities = os.listdir(f'icons/abilities/{self.survivor_name}')
+        try:
+            folder_icon_abilities = os.listdir(f'icons/abilities/{self.survivor_name}')
+        except:
+            print('missing abilities folder for ', self.survivor_name)
+            return
         self.dict_abilities_buttons = {ability.lower(): [] for ability in abilities}
 
         for i in range(len(abilities)):

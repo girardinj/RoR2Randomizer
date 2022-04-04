@@ -1,29 +1,85 @@
 import sys
+from tkinter import Misc
 from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtWidgets import QApplication, QWidget, QComboBox, QCheckBox, QPushButton, QSpinBox
-from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QStackedLayout
+from PyQt6.QtWidgets import QApplication, QWidget, QComboBox, QCheckBox, QPushButton, QSpinBox, QLabel
+from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QStackedLayout, QGridLayout
 from PyQt6.QtGui import QIcon
 
 from functools import partial
 
+import os
+import re
+
 import tools
+
+icon_size = QSize(30, 30)
 
 class AbilityWidget(QWidget):
     def __init__(self, survivor_name, survivor_icon):
         super().__init__()
-        self.init_ui(survivor_name, survivor_icon)
+        self.survivor_name = survivor_name
+        self.init_ui()
     
-    def init_ui(self, survivor_name, survivor_icon):
+    def init_ui(self):
+
+        layoutMain = QGridLayout(self)
+        self.fill_layout(layoutMain)
+
+        self.set_default_values_gui()
+
+    def fill_layout(self, mainLayout):
         
-        layoutsAbilities = [
-            QHBoxLayout(), # main
-            QHBoxLayout(), # secondary
-            QHBoxLayout(), # utility
-            QHBoxLayout(), # special
+        abilities = [
+            'Primary',
+            'Secondary',
+            'Utility',
+            'Special',
         ]
+        if self.survivor_name == 'MUL-T':
+            abilities.insert(1, 'Misc')
+            abilities.insert(2, 'Misc')
+        elif self.survivor_name == 'Acrid' or self.survivor_name == 'Railgunner' or self.survivor_name == 'Void Fiend':
+            abilities.insert(0, 'Misc')
+        elif self.survivor_name == 'Captain':
+            abilities.insert(4, 'Misc')
+            abilities.insert(5, 'Misc')
+
+
+        folder_icon_abilities = os.listdir(f'icons/abilities/{self.survivor_name}')
+        self.dict_abilities_buttons = {ability.lower(): [] for ability in abilities}
+
+        for i in range(len(abilities)):
+            title = abilities[i]
+            mainLayout.addWidget(QLabel(title) , i, 0)
+            self.add_to_array(folder_icon_abilities, mainLayout, i, 1, f'^{title.lower()}')
+
+    def get_array(self, abilities, matcher):
+        return [ability for ability in abilities if re.match(matcher, ability)]
+
+    def add_to_array(self, folder_icon_abilities, layout, row, column, matcher):
+        for item in self.get_array(folder_icon_abilities, matcher):
+            name = item.split('.')[0]
+            icon = QIcon(f'icons/abilities/{self.survivor_name}/{item}')
+            button = QPushButton(icon, '')
+            button.setCheckable(True)
+            button.setChecked(False)
+            button.setEnabled(True)
+            button.setIconSize(icon_size)
+            button.setStyleSheet(tools.get_button_stylesheet())
+            button.setToolTip(f'{name}')
+            self.dict_abilities_buttons[name[:-1]].append(button)
+            layout.addWidget(button, row, column)
+            column += 1
+
+    def set_default_values_gui(self):
+        for key, buttons in self.dict_abilities_buttons.items():
+            if len(buttons) == 0:
+                pass# print(f'missing icon for {key} ability in {self.survivor_name}!')
+            else:
+                buttons[0].setChecked(True)
+                for button in buttons[1:]:
+                    button.setChecked(False)
         
-        layout = QVBoxLayout(self)
-        layout.addWidget(btn)
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -48,58 +104,25 @@ class MainWindow(QWidget):
 
     def init_data(self):
         # gamemodes
-        self.gamemodes_names = [
-            'Normal',
-            'Eclipse',
-            'Simulacrum'
-        ]
-        self.gamemodes_icons = [QIcon(f'icons/gamemodes/{gamemode}.png') for gamemode in self.gamemodes_names]
+        with open('src/gamemodes_list.txt', 'r') as f:
+            self.gamemodes_names = f.read().splitlines()
+        self.gamemodes_icons = [QIcon(f'icons/gamemodes/{gamemode}.webp') for gamemode in self.gamemodes_names]
         self.manually_select_gamemode = True
         
         # survivors
-        self.survivors_names = [
-            'Commando',
-            'Huntress',
-            'Bandit',
-            'MUL-T',
-            'Engineer',
-            'Artificer',
-            'Mercenary',
-            'REX',
-            'Loader',
-            'Captain',
-            'Acrid',
-            'Raigunner',
-            'Void Fiend',
-        ]
-        self.survivors_icons = [QIcon(f'icons/survivors/{survivor}.png') for survivor in self.survivors_names]
+        with open('src/survivors_list.txt', 'r') as f:
+            self.survivors_names = f.read().splitlines()
+        self.survivors_icons = [QIcon(f'icons/survivors/{survivor}.webp') for survivor in self.survivors_names]
         self.manually_select_survivor = False
         
         # artifacts
-        self.artifacts_names = [
-            'None',
-            'Chaos',
-            'Command',
-            'Death',
-            'Dissonance',
-            'Enigma',
-            'Evolution',
-            'Frailty',
-            'Glass',
-            'Honor',
-            'Kin',
-            'Metamorphosis',
-            'Sacrifice',
-            'Soul',
-            'Spite',
-            'Swarms',
-            'Vengeance',
-        ]
-        self.artifacts_icons = [QIcon(f'icons/artifacts/{artifact}.png') for artifact in self.artifacts_names]
+        with open('src/artifacts_list.txt', 'r') as f:
+            self.artifacts_names = f.read().splitlines()
+        self.artifacts_icons = [QIcon(f'icons/artifacts/{artifact}.webp') for artifact in self.artifacts_names]
         self.manually_select_artifact = True
         
     def set_left_side(self):
-        # survivor        
+        # survivor abilities
         self.cbSurvivorLeft = QComboBox()
         for survivor, icon in zip(self.survivors_names, self.survivors_icons):
             self.cbSurvivorLeft.addItem(icon, survivor) 
@@ -128,6 +151,7 @@ class MainWindow(QWidget):
         self.cbGamemode = QComboBox()
         for gamemode, gamemode_icon in zip(self.gamemodes_names, self.gamemodes_icons):
             self.cbGamemode.addItem(gamemode_icon, gamemode)
+        # self.cbGamemode.currentIndexChanged.connect(self.cbGamemodeIndexChanged)
 
         # survivor
         self.cbxSurvivor = QCheckBox('Manually select survivor')
@@ -138,7 +162,7 @@ class MainWindow(QWidget):
             self.cbSurvivorRight.addItem(icon, survivor)
         self.cbSurvivorRight.currentIndexChanged.connect(partial(self.cbSurvivorIndexChanged, self.cbSurvivorRight))
         
-        self.survivors_buttons = tools.create_buttons(self.survivors_icons, QSize(30, 30), self.survivors_names, self.btnSurvivorToggled)
+        self.survivors_buttons = tools.create_buttons(self.survivors_icons, icon_size, self.survivors_names, self.btnSurvivorToggled)
         gridSurvivor = tools.create_grid(self.survivors_buttons, 8)
         
         # artifact
@@ -159,7 +183,7 @@ class MainWindow(QWidget):
         layoutArtifactLuck.addWidget(self.cbArtifactLuck)
         layoutArtifactLuck.addWidget(self.sbCustomArtifactLuck)
         
-        self.artifacts_buttons = tools.create_buttons(self.artifacts_icons, QSize(30, 30), self.artifacts_names)
+        self.artifacts_buttons = tools.create_buttons(self.artifacts_icons, icon_size, self.artifacts_names)
         gridArtifact = tools.create_grid(self.artifacts_buttons, 4)
         
         # start button
@@ -217,6 +241,14 @@ class MainWindow(QWidget):
         self.sbCustomArtifactLuck.setVisible(False)
         self.cbxArtifact.setChecked(self.manually_select_artifact)
         self.cbxArtifactToggled(self.manually_select_artifact)
+
+    # better when it is always visible
+    # def cbGamemodeIndexChanged(self, index):
+    #     visible = index == 0
+    #     self.cbxArtifact.setVisible(visible)
+    #     self.cbArtifactLuck.setVisible(visible)
+    #     for btn in self.artifacts_buttons:
+    #         btn.setVisible(visible)
 
     def cbxGamemodeToggled(self, checked):
         self.manually_select_gamemode = checked
@@ -315,7 +347,7 @@ class MainWindow(QWidget):
             
             for i in range(len(self.artifacts_buttons)):
                 self.artifacts_buttons[i].setChecked(i in btn_to_activate)
-                    
+
             
 
 def main():

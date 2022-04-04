@@ -7,10 +7,7 @@ def get_random_int(min: int, max: int):
     return random.randint(min, max)
 
 def create_buttons(icons, iconSize, toolTips, slot=None):
-    btnStyleSheet = """
-    QPushButton {background-color: red;}
-    QPushButton::checked {background-color: #B0B0B0}
-    """
+    btnStyleSheet = get_button_stylesheet()
     buttons = [QPushButton(icon, '', None) for icon in icons]
     for button, toolTip in zip(buttons, toolTips):
             button.setCheckable(True)
@@ -33,3 +30,9 @@ def create_grid(buttons, columns):
                 break
             grid.addWidget(buttons[index], i, j)
     return grid
+
+def get_button_stylesheet():
+    return """
+    QPushButton {background-color: red;}
+    QPushButton::checked {background-color: #B0B0B0}
+    """

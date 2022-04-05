@@ -7,7 +7,7 @@ def get_random_int(min: int, max: int):
     '''min and max are included'''
     return random.randint(min, max)
 
-def create_buttons(icons, buttonIconSize, toolTips, slot=None):
+def create_buttons(icons, buttonIconSize, borderSize, toolTips, slot=None):
     btnStyleSheet = get_button_stylesheet()
     buttons = [QPushButton(icon, '', None) for icon in icons]
     for button, toolTip in zip(buttons, toolTips):
@@ -16,7 +16,7 @@ def create_buttons(icons, buttonIconSize, toolTips, slot=None):
             button.setEnabled(True)
             button.setToolTip(toolTip)
             button.setFixedSize(buttonIconSize)
-            button.setIconSize(buttonIconSize - QSize(10, 10)) # add border
+            button.setIconSize(buttonIconSize - borderSize)
             button.setStyleSheet(btnStyleSheet)
             if slot:
                 button.clicked.connect(partial(slot, button))
@@ -35,6 +35,6 @@ def create_grid(buttons, columns):
 
 def get_button_stylesheet():
     return """
-    QPushButton {background-color: red;}
-    QPushButton::checked {background-color: #B0B0B0}
+    QPushButton {background-color: transparent;}
+    QPushButton::checked {background-color: transparent; border: solid; border-color: #000000; border-width: 2px;}
     """

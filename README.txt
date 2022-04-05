@@ -34,3 +34,7 @@ On windows
 On linux
 - right click
   open terminal
+
+
+
+Special thanks to Heragon, who helped me download a few icons !

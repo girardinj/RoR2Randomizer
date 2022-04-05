@@ -1,19 +1,38 @@
-import sys
-from tkinter import Misc
-from turtle import Shape
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtWidgets import QApplication, QWidget, QComboBox, QCheckBox, QPushButton, QSpinBox, QLabel, QSplitter, QFrame
-from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QStackedLayout, QGridLayout
-from PyQt6.QtGui import QIcon
-
-from functools import partial
-
 import os
 import re
+import sys
+from functools import partial
+
+from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
+                             QDialogButtonBox, QFrame, QGridLayout,
+                             QHBoxLayout, QLabel, QPushButton, QSpinBox,
+                             QStackedLayout, QStyle, QVBoxLayout, QWidget)
 
 import tools
 
-button_icon_size = QSize(50, 50)
+BUTTON_ICON_SIZE = QSize(50, 50)
+BUTTON_ICON_BORDER_SIZE = QSize(10, 10)
+ICON_FORMAT = '.webp'
+
+class OkDialog(QDialog):
+    def __init__(self, title, content, icon, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.setWindowIcon(icon)
+        buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        buttonBox.accepted.connect(self.accept)
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel(content))
+        layout.addWidget(buttonBox)
+
+    def accept(self):
+        return super().accept()
+
+    @staticmethod
+    def critical(widget, text):
+        return OkDialog('Error', text, widget.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxCritical))
 
 class AbilityWidget(QWidget):
     def __init__(self, survivor_name, survivor_icon):
@@ -21,7 +40,6 @@ class AbilityWidget(QWidget):
         self.survivor_name = survivor_name
         self.init_ui()
     
-
     def init_ui(self):
 
         layoutMain = QGridLayout(self)
@@ -32,6 +50,19 @@ class AbilityWidget(QWidget):
 
     def fill_layout(self, mainLayout):
         
+        try:
+            with(open(f'icons/abilities/{self.survivor_name}/abilities.txt', 'r')) as f:
+                abilities_names = f.read().splitlines()
+        except:
+            OkDialog.critical(self, f'Missing abilities.txt file for {self.survivor_name}!').exec()
+            exit(-1)
+
+        folder_icon_abilities = [x for x in os.listdir(f'icons/abilities/{self.survivor_name}') if x.endswith(ICON_FORMAT)]
+
+        if len(abilities_names) != len(folder_icon_abilities):
+            OkDialog.critical(self, f'Missing icons abilities or too much abilities in abilities.txt for {self.survivor_name}!').exec()
+            exit(-1)
+
         abilities = [
             'Primary',
             'Secondary',
@@ -40,40 +71,43 @@ class AbilityWidget(QWidget):
         ]
 
         # used for some black magic sorcery when the survivor has two misc abilities
-        has_to_misc = False
+        has_two_misc = False
         is_first_misc = True
         if self.survivor_name == 'MUL-T':
-            abilities.insert(1, 'Misc1')
-            abilities.insert(2, 'Misc2')
-            has_to_misc = True
+            abilities.insert(1, 'Misc')
+            abilities_names = abilities_names[:-4] + abilities_names
+            has_two_misc = True
         elif self.survivor_name == 'Acrid' or self.survivor_name == 'Railgunner' or self.survivor_name == 'Void Fiend':
             abilities.insert(0, 'Misc')
         elif self.survivor_name == 'Captain':
             abilities.insert(4, 'Misc1')
             abilities.insert(5, 'Misc2')
-            has_to_misc = True
+            abilities_names = abilities_names + abilities_names[-4:] # add the misc abilities to the end of the list a second time
+            has_two_misc = True
 
-        folder_icon_abilities = os.listdir(f'icons/abilities/{self.survivor_name}')
 
         self.dict_abilities_buttons = {ability.lower(): [] for ability in abilities}
 
         for i in range(len(abilities)):
             title = abilities[i]
             mainLayout.addWidget(QLabel(title) , i, 0)
-            self.add_to_array(folder_icon_abilities, mainLayout, i, 1, title.lower(), has_to_misc, is_first_misc)
-            if has_to_misc:
-                if i == 1 and self.survivor_name == 'MUL-T' or i == 4 and self.survivor_name == 'Captain':
+            self.add_to_array(folder_icon_abilities, abilities_names, mainLayout, i, 1, title.lower(), has_two_misc, is_first_misc)
+            if has_two_misc:
+                if i == 0 and self.survivor_name == 'MUL-T' or i == 4 and self.survivor_name == 'Captain':
                     is_first_misc = False
+        
 
     def get_array(self, abilities, title):
         # we do some sorcery here for the survivors who have two misc abilities
-        if re.match('^misc', title):
+        if self.survivor_name == 'MUL-T' and re.match('^misc', title):
+            matcher = '^primary'
+        elif re.match('^misc', title):
             matcher = '^misc'
         else:
             matcher = f'^{title}'
         return [ability for ability in abilities if re.match(matcher, ability)]
 
-    def add_to_array(self, folder_icon_abilities, layout, row, column, matcher, has_two_misc = False, is_first_misc = False):
+    def add_to_array(self, folder_icon_abilities, abilities_names, layout, row, column, matcher, has_two_misc = False, is_first_misc = False):
         for item in self.get_array(folder_icon_abilities, matcher):
             name = item.split('.')[0]
             icon = QIcon(f'icons/abilities/{self.survivor_name}/{item}')
@@ -81,18 +115,23 @@ class AbilityWidget(QWidget):
             button.setCheckable(True)
             button.setChecked(False)
             button.setEnabled(True)
-            button.setIconSize(button_icon_size)
-            button.setFixedSize(button_icon_size)
+            button.setIconSize(BUTTON_ICON_SIZE - BUTTON_ICON_BORDER_SIZE) # add border
+            button.setFixedSize(BUTTON_ICON_SIZE)
             button.setStyleSheet(tools.get_button_stylesheet())
-            button.setToolTip(f'{name}')
+            button.setToolTip(abilities_names.pop(0))
             # double misc abilities, the return of the sorcery
+            
             if re.match('^misc', name):
                 if has_two_misc:
                     if is_first_misc:
                         name = 'misc1_'
                     else:
                         name = 'misc2_'
-
+                  
+            elif self.survivor_name == 'MUL-T' and re.match('^primary', name):
+                if not is_first_misc:
+                        name = 'misc_'
+            
             self.dict_abilities_buttons[name[:-1]].append(button)
             button.clicked.connect(partial(self.on_button_clicked, name[:-1], button))
             layout.addWidget(button, row, column)
@@ -120,7 +159,7 @@ class AbilityWidget(QWidget):
             sender.setChecked(True)
 
     def randomize_abilities(self):
-        for key, buttons in self.dict_abilities_buttons.items():
+        for _, buttons in self.dict_abilities_buttons.items():
             if len(buttons) <= 1:
                 pass
             else:
@@ -132,7 +171,6 @@ class AbilityWidget(QWidget):
                     else:
                         buttons[i].setChecked(False)
         
-
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -141,6 +179,7 @@ class MainWindow(QWidget):
     def init_ui(self):
         self.setGeometry(300, 300, 300, 300)
         self.setWindowTitle('RoR2 randomize my game !')
+        self.setWindowIcon(QIcon(f'icons/ror2-logo{ICON_FORMAT}'))
         
         self.init_data()
         
@@ -163,23 +202,44 @@ class MainWindow(QWidget):
         
         self.set_default_values_gui()
 
+    def import_list_and_icons(self, list_name, icons_folder):
+        try:
+            with open(f'src/{list_name}', 'r') as f:
+                list_names = f.read().splitlines()
+        except:
+            OkDialog.critical(self, f'Missing {list_name}.txt file!').exec()
+            exit(-1)
+
+        try:
+            icons = []
+            for name in list_names:
+                icon = QIcon()
+                pixmap = QPixmap(f'icons/{icons_folder}/{name}{ICON_FORMAT}')
+                icon.addPixmap(pixmap, QIcon.Mode.Normal)
+                icon.addPixmap(pixmap, QIcon.Mode.Disabled)
+                icons.append(icon)
+            # icons = [QIcon(f'icons/{icons_folder}/{name}{ICON_FORMAT}') for name in list_names]
+        except:
+            OkDialog.critical(self, f'Missing {icons_folder} icons!').exec()
+            exit(-1)
+        
+        if len(list_names) != len(icons):
+            OkDialog.critical(self, f'Missing icons or too much things in {list_name}!').exec()
+            exit(-1)
+
+        return list_names, icons
+
     def init_data(self):
         # gamemodes
-        with open('src/gamemodes_list.txt', 'r') as f:
-            self.gamemodes_names = f.read().splitlines()
-        self.gamemodes_icons = [QIcon(f'icons/gamemodes/{gamemode}.webp') for gamemode in self.gamemodes_names]
+        self.gamemodes_names, self.gamemodes_icons = self.import_list_and_icons('gamemodes_list.txt', 'gamemodes')
         self.manually_select_gamemode = True
         
         # survivors
-        with open('src/survivors_list.txt', 'r') as f:
-            self.survivors_names = f.read().splitlines()
-        self.survivors_icons = [QIcon(f'icons/survivors/{survivor}.webp') for survivor in self.survivors_names]
+        self.survivors_names, self.survivors_icons = self.import_list_and_icons('survivors_list.txt', 'survivors')
         self.manually_select_survivor = False
         
         # artifacts
-        with open('src/artifacts_list.txt', 'r') as f:
-            self.artifacts_names = f.read().splitlines()
-        self.artifacts_icons = [QIcon(f'icons/artifacts/{artifact}.webp') for artifact in self.artifacts_names]
+        self.artifacts_names, self.artifacts_icons = self.import_list_and_icons('artifacts_list.txt', 'artifacts')
         self.manually_select_artifact = True
         
     def set_left_side(self):
@@ -223,7 +283,7 @@ class MainWindow(QWidget):
             self.cbSurvivorRight.addItem(icon, survivor)
         self.cbSurvivorRight.currentIndexChanged.connect(partial(self.cbSurvivorIndexChanged, self.cbSurvivorRight))
         
-        self.survivors_buttons = tools.create_buttons(self.survivors_icons, button_icon_size, self.survivors_names, self.btnSurvivorToggled)
+        self.survivors_buttons = tools.create_buttons(self.survivors_icons, BUTTON_ICON_SIZE, BUTTON_ICON_BORDER_SIZE, self.survivors_names, self.btnSurvivorToggled)
         gridSurvivor = tools.create_grid(self.survivors_buttons, 8)
         
         # artifact
@@ -244,7 +304,7 @@ class MainWindow(QWidget):
         layoutArtifactLuck.addWidget(self.cbArtifactLuck)
         layoutArtifactLuck.addWidget(self.sbCustomArtifactLuck)
         
-        self.artifacts_buttons = tools.create_buttons(self.artifacts_icons, button_icon_size, self.artifacts_names)
+        self.artifacts_buttons = tools.create_buttons(self.artifacts_icons, BUTTON_ICON_SIZE, BUTTON_ICON_BORDER_SIZE, self.artifacts_names)
         gridArtifact = tools.create_grid(self.artifacts_buttons, 4)
         
         # start button

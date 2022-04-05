@@ -9,5 +9,5 @@ REX
 Loader
 Captain
 Acrid
-Raigunner
+Railgunner
 Void Fiend

@@ -1,0 +1,7 @@
+DIRECTIVE: Injest
+DIRECTIVE: Drill
+Seed Barrage
+DIRECTIVE: Disperse
+Bramble Volley
+DIRECTIVE: Harvest
+Tangling Growth

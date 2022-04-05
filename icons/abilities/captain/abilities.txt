@@ -1,0 +1,9 @@
+Vulcan Shotgun
+Power Tazer
+Orbital Probe
+OGM-72 'DIABLO' Strike
+Orbital Supply Beacon
+Beacon: Healing
+Beacon: Shocking
+Beacon: Resupply
+Beacon: Hacking

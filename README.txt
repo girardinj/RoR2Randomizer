@@ -8,6 +8,18 @@ To launch the program simply launch the corresponding file:
 - RoR2Randomizer.bat on windows
 - RoR2Randomizer.sh on linux
 
+Want to do it manually ?
+
+To install:
+- create a python venv
+- activate the venv
+- install the requirements.txt
+
+To launch:
+- activate the venv
+- launch the RoR2Randomizer.py (watch out the root folder must be the same as the one used here)
+
+
 # Installation guide
 
 Python3 is required, you can download it here

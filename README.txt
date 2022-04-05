@@ -1,19 +1,17 @@
 # User guide
 
-To launch the program simply launch the corresponding file:
-- RoR2Randomizer.bat on windows
-- RoR2Randomizer.sh on linux
+To launch the program simply launch the file:
+- RoR2Randomizer.bat
 
 Want to do it manually ?
 - activate the venv
-- launch the RoR2Randomizer.py (watch out the root folder must be the same as the one used here)
+- launch the RoR2Randomizer.py (watch out the root folder must be the same as the one this README is)
 
 
 # Installation guide
 
-To install the program launch the corresponding file:
-- install.bat on windows
-- install.sh on linux
+To install the program launch the file:
+- install.bat
 
 Want to do it manually ?
 - create a python venv
@@ -33,17 +31,12 @@ it should say something like 'Python 3.10.3'
 
 
 to open a terminal you can:
-
-On windows
 - Win + R
   type 'CMD'
   Enter
 - Win
   search 'CMD'
 
-On linux
-- right click
-  open terminal
 
 # Uninstall guide
 

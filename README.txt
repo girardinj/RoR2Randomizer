@@ -24,9 +24,9 @@ Python3 is required, you can download it here
 https://www.python.org/downloads/
 
 When installing be sure to check:
-    - the 'Add Python to environnement variables' checkbox
+- the 'Add Python to environnement variables' checkbox
 
-be sure python works on your system
+Make sure that python works on your system !
 
 you can open a terminal and type 'py --version'
 it should say something like 'Python 3.10.3'
@@ -45,6 +45,11 @@ On linux
 - right click
   open terminal
 
+# Uninstall guide
+
+to uninstall the program launch you can delete the root folder
+
+to uninstall python use your application manager
 
 
 Special thanks to Herzagon, who helped me download a few icons !

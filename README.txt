@@ -1,19 +1,10 @@
 # User guide
 
-To install the program launch the corresponding file:
-- install.bat on windows
-- install.sh on linux
-
 To launch the program simply launch the corresponding file:
 - RoR2Randomizer.bat on windows
 - RoR2Randomizer.sh on linux
 
 Want to do it manually ?
-
-To install:
-- create a python venv
-- activate the venv
-- install the requirements.txt
 
 To launch:
 - activate the venv
@@ -21,6 +12,15 @@ To launch:
 
 
 # Installation guide
+
+To install the program launch the corresponding file:
+- install.bat on windows
+- install.sh on linux
+
+To install:
+- create a python venv
+- activate the venv
+- install the requirements.txt
 
 Python3 is required, you can download it here
 https://www.python.org/downloads/

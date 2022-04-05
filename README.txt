@@ -49,4 +49,7 @@ On linux
 
 
 
-Special thanks to Heragon, who helped me download a few icons !
+Special thanks to Herzagon, who helped me download a few icons !
+
+All icons comes from the fandom wiki
+https://riskofrain2.fandom.com/wiki/Risk_of_Rain_2_Wiki

@@ -38,6 +38,7 @@ class AbilityWidget(QWidget):
     def __init__(self, survivor_name, survivor_icon):
         super().__init__()
         self.survivor_name = survivor_name
+        self.survivor_name_lowered = survivor_name.lower()
         self.init_ui()
     
     def init_ui(self):
@@ -51,13 +52,13 @@ class AbilityWidget(QWidget):
     def fill_layout(self, mainLayout):
         
         try:
-            with(open(f'icons/abilities/{self.survivor_name}/abilities.txt', 'r')) as f:
+            with(open(f'icons/abilities/{self.survivor_name_lowered}/abilities.txt', 'r')) as f:
                 abilities_names = f.read().splitlines()
         except:
             OkDialog.critical(self, f'Missing abilities.txt file for {self.survivor_name}!').exec()
             exit(-1)
 
-        folder_icon_abilities = [x for x in os.listdir(f'icons/abilities/{self.survivor_name}') if x.endswith(ICON_FORMAT)]
+        folder_icon_abilities = [x for x in os.listdir(f'icons/abilities/{self.survivor_name_lowered}') if x.endswith(ICON_FORMAT)]
 
         if len(abilities_names) != len(folder_icon_abilities):
             OkDialog.critical(self, f'Missing icons abilities or too much abilities in abilities.txt for {self.survivor_name}!').exec()
@@ -110,7 +111,7 @@ class AbilityWidget(QWidget):
     def add_to_array(self, folder_icon_abilities, abilities_names, layout, row, column, matcher, has_two_misc = False, is_first_misc = False):
         for item in self.get_array(folder_icon_abilities, matcher):
             name = item.split('.')[0]
-            icon = QIcon(f'icons/abilities/{self.survivor_name}/{item}')
+            icon = QIcon(f'icons/abilities/{self.survivor_name_lowered}/{item}')
             button = QPushButton(icon, '')
             button.setCheckable(True)
             button.setChecked(False)
@@ -214,7 +215,7 @@ class MainWindow(QWidget):
             icons = []
             for name in list_names:
                 icon = QIcon()
-                pixmap = QPixmap(f'icons/{icons_folder}/{name}{ICON_FORMAT}')
+                pixmap = QPixmap(f'icons/{icons_folder}/{name.lower()}{ICON_FORMAT}')
                 icon.addPixmap(pixmap, QIcon.Mode.Normal)
                 icon.addPixmap(pixmap, QIcon.Mode.Disabled)
                 icons.append(icon)

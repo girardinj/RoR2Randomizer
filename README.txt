@@ -30,12 +30,13 @@ you can open a terminal and type 'py --version'
 it should say something like 'Python 3.10.3'
 
 
-to open a terminal you can:
+to open a terminal you can either:
 - Win + R
-  type 'CMD'
+  type 'cmd'
   Enter
+or:
 - Win
-  search 'CMD'
+  search 'cmd'
 
 
 # Uninstall guide

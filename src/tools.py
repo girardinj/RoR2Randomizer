@@ -1,4 +1,3 @@
-from PyQt6.QtCore import QSize
 from PyQt6.QtWidgets import QPushButton, QGridLayout
 import random
 from functools import partial

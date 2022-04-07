@@ -205,10 +205,10 @@ class MainWindow(QWidget):
 
     def import_list_and_icons(self, list_name, icons_folder):
         try:
-            with open(f'src/{list_name}', 'r') as f:
+            with open(f'{list_name}', 'r') as f:
                 list_names = f.read().splitlines()
         except:
-            OkDialog.critical(self, f'Missing {list_name}.txt file!').exec()
+            OkDialog.critical(self, f'Missing {list_name} file!').exec()
             exit(-1)
 
         try:

@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QPushButton, QGridLayout
 import random
 from functools import partial
+import os, sys
 
 def get_random_int(min: int, max: int):
     '''min and max are included'''

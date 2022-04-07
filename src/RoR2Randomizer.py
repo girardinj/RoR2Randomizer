@@ -205,7 +205,7 @@ class MainWindow(QWidget):
 
     def import_list_and_icons(self, list_name, icons_folder):
         try:
-            with open(f'{list_name}', 'r') as f:
+            with open(f'./data/{list_name}', 'r') as f:
                 list_names = f.read().splitlines()
         except:
             OkDialog.critical(self, f'Missing {list_name} file!').exec()
@@ -241,7 +241,7 @@ class MainWindow(QWidget):
         
         # artifacts
         self.artifacts_names, self.artifacts_icons = self.import_list_and_icons('artifacts_list.txt', 'artifacts')
-        self.manually_select_artifact = True
+        self.manually_select_artifact = False
         
     def set_left_side(self):
         # survivor abilities

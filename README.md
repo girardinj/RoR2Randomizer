@@ -8,7 +8,7 @@ Want to do it manually ?
 - launch the RoR2Randomizer.py (watch out the root folder must be the same as the one this README is)
 
 
-# Installation guide
+# Installation guide (with source code)
 
 To install the program launch the file:
 - install.bat
@@ -39,7 +39,7 @@ or:
   search 'cmd'
 
 
-# Uninstall guide
+# Uninstall guide (with source code)
 
 to uninstall the program launch you can delete the root folder
 

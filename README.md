@@ -46,6 +46,8 @@ to uninstall the program launch you can delete the root folder
 to uninstall python use your application manager
 
 
+# Other
+
 Special thanks to Herzagon, who helped me download a few icons !
 
 All icons comes from the fandom wiki
